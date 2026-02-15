@@ -18,13 +18,22 @@ export default function ResultCard({ risk, riskReasons, riskScore }: ResultCardP
                 Risk Assessment
             </h2>
 
-            <div className={`inline-block px-4 py-2 rounded-full font-semibold ${riskStyle}`}>
-                {risk}
+            <div className={`inline-flex items-center px-6 py-3 rounded-full font-bold text-lg tracking-wide ${riskStyle}`}>
+
+                <span className="mr-3 text-xl">●</span>
+
+                {risk === "NOT RECOMMENDED" ? "⚠ NOT RECOMMENDED – FIELD ENTRY RISK" : risk}
+
             </div>
 
+
             <p className="mt-3 text-slate-300 text-sm">
-                Risk Score: <span className="font-semibold">{riskScore}</span>
+                Risk Score:
+                <span className="ml-2 px-2 py-1 rounded bg-slate-900 border border-slate-700 font-semibold">
+                    {riskScore}
+                </span>
             </p>
+
 
 
             <ul className="mt-3 list-disc list-inside text-sm text-slate-300">
