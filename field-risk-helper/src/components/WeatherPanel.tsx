@@ -5,12 +5,13 @@ type WeatherPanelProps = {
     lastUpdated: string;
     loading: boolean;
     rainMm: number | null;
+    snowCm: number | null;
 
 };
 
-export default function WeatherPanel({ weather, city, elevation, lastUpdated, loading,  rainMm }: WeatherPanelProps) {
+export default function WeatherPanel({ weather, city, elevation, lastUpdated, loading, rainMm, snowCm }: WeatherPanelProps) {
     return (
-        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6">
+        <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6 shadow-lg">
             <h2 className="text-lg font-semibold mb-3">
                 Current Weather – {city}
             </h2>
@@ -22,6 +23,8 @@ export default function WeatherPanel({ weather, city, elevation, lastUpdated, lo
                     <p>Temperature: {weather.temperature}°C</p>
                     <p>Wind Speed: {weather.windspeed} km/h</p>
                     <p>Rain (hourly): {rainMm ?? "N/A"} mm</p>
+                    <p>Snow (hourly): {snowCm ?? "N/A"} cm</p>
+
 
                     {elevation !== null && (
                         <p>Elevation: {elevation} m a.s.l.</p>
