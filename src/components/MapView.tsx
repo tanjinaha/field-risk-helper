@@ -58,11 +58,15 @@ export default function MapView({
   showOilGas,
 }: MapViewProps) {
   const [showLegend, setShowLegend] = useState(false);
+
+  // This is needed because you pass setClickPoint into MapClickCoordinates
   const [clickPoint, setClickPoint] = useState<ClickPoint | null>(null);
 
+  // Build the correct legend URL for the selected geology layer
   const legendUrl = useMemo(() => {
     const serviceName =
       geologyLayer === "bedrock" ? "BerggrunnWMS3" : "LosmasserWMS3";
+
     return (
       `https://geo.ngu.no/mapserver/${serviceName}` +
       "?SERVICE=WMS" +
@@ -79,28 +83,25 @@ export default function MapView({
       ? "Bedrock (Berggrunn)"
       : "Loose deposits (Løsmasser)";
 
+  // NGU search link for the clicked coordinate (now we will actually use it)
   const nguSearchUrl = (p: ClickPoint) =>
-    `https://www.ngu.no/sok?query=${p.lat.toFixed(
-      5
-    )}%2C${p.lng.toFixed(5)}`;
+    `https://www.ngu.no/sok?query=${p.lat.toFixed(5)}%2C${p.lng.toFixed(5)}`;
 
+  // Simple basin classification from latitude
   let basinName = "North Sea Basin";
+  if (lat >= 60 && lat < 70) basinName = "Norwegian Sea Basin";
+  if (lat >= 70) basinName = "Barents Sea Basin";
 
-  if (lat >= 60 && lat < 70) {
-    basinName = "Norwegian Sea Basin";
-  }
-
-  if (lat >= 70) {
-    basinName = "Barents Sea Basin";
-  }
-
-  const petroleumSystems: Record<string, {
-    source: string;
-    reservoir: string;
-    seal: string;
-    trap: string;
-    migration: string;
-  }> = {
+  const petroleumSystems: Record<
+    string,
+    {
+      source: string;
+      reservoir: string;
+      seal: string;
+      trap: string;
+      migration: string;
+    }
+  > = {
     "North Sea Basin": {
       source: "Upper Jurassic Draupne Formation shales",
       reservoir: "Brent Group sandstones",
@@ -123,13 +124,13 @@ export default function MapView({
       migration: "Long-distance lateral migration",
     },
   };
-  const system = petroleumSystems[basinName];
 
-
-
+  // Safety fallback (should always exist, but prevents crash if keys change)
+  const system =
+    petroleumSystems[basinName] ?? petroleumSystems["North Sea Basin"];
 
   return (
-    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700  shadow-lg mb-6">
+    <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg mb-6">
       <div className="flex items-center justify-between gap-3 mb-2">
         <p className="text-sm text-slate-300">
           NGU geology overlays for learning and pre-field planning.
@@ -145,9 +146,38 @@ export default function MapView({
         )}
       </div>
 
+      {/* Click info box (uses nguSearchUrl so build passes) */}
+      {showGeology && clickPoint && (
+        <div className="mb-4 p-3 rounded-lg border border-slate-700 bg-slate-900 text-sm text-slate-300">
+          <div className="flex flex-col gap-2">
+            <div>
+              <span className="text-slate-400">Clicked:</span>{" "}
+              {clickPoint.lat.toFixed(5)}, {clickPoint.lng.toFixed(5)}
+            </div>
+
+            <div className="flex items-center gap-3">
+              <a
+                href={nguSearchUrl(clickPoint)}
+                target="_blank"
+                rel="noreferrer"
+                className="underline text-slate-200 hover:text-white"
+              >
+                Search these coordinates on NGU
+              </a>
+
+              <button
+                onClick={() => setClickPoint(null)}
+                className="px-2 py-1 rounded-md bg-slate-800 border border-slate-700 hover:bg-slate-700 text-xs"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MAP + PANEL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
         {/* MAP */}
         <div className="lg:col-span-2 h-80 rounded-lg overflow-hidden border border-slate-700">
           <MapContainer
@@ -226,7 +256,6 @@ export default function MapView({
                 : "Turn on Geology to connect rocks and structures to petroleum elements."}
             </p>
 
-
             <div className="mt-4 space-y-3 text-sm text-slate-300">
               <div>
                 <div className="text-slate-400 text-xs">Main age</div>
@@ -246,45 +275,59 @@ export default function MapView({
               <div>
                 <div className="text-slate-400 text-xs">Why it matters</div>
                 <div>
-                  One of the world’s most important offshore petroleum provinces.
+                  One of the world’s most important offshore petroleum
+                  provinces.
                 </div>
               </div>
 
               <div>
-                <div className="text-slate-400 text-xs">Petroleum System Elements</div>
+                <div className="text-slate-400 text-xs">
+                  Petroleum System Elements
+                </div>
                 <ul className="list-disc ml-4 mt-1 space-y-1">
-                  <li><strong>Source:</strong> {system.source}</li>
-                  <li><strong>Reservoir:</strong> {system.reservoir}</li>
-                  <li><strong>Seal:</strong> {system.seal}</li>
-                  <li><strong>Trap:</strong> {system.trap}</li>
-                  <li><strong>Migration:</strong> {system.migration}</li>
+                  <li>
+                    <strong>Source:</strong> {system.source}
+                  </li>
+                  <li>
+                    <strong>Reservoir:</strong> {system.reservoir}
+                  </li>
+                  <li>
+                    <strong>Seal:</strong> {system.seal}
+                  </li>
+                  <li>
+                    <strong>Trap:</strong> {system.trap}
+                  </li>
+                  <li>
+                    <strong>Migration:</strong> {system.migration}
+                  </li>
                 </ul>
               </div>
 
-
-
-
               <div className="mt-4">
-                <div className="text-slate-400 text-xs">Field Geological Implications</div>
+                <div className="text-slate-400 text-xs">
+                  Field Geological Implications
+                </div>
 
                 <p className="mb-2 text-sm text-slate-300">
-                  Geological context can amplify or reduce field risk depending on weather and terrain conditions.
+                  Geological context can amplify or reduce field risk depending
+                  on weather and terrain conditions.
                 </p>
-                
+
                 <ul className="list-disc ml-4 mt-1 space-y-1 text-sm">
                   <li>Faulted areas may contain fractured and unstable rock.</li>
                   <li>Loose Quaternary deposits increase slip risk during rain.</li>
                   <li>Steep structural dips may increase rockfall potential.</li>
-                  <li>Lithology affects erosion, drainage, and access conditions.</li>
+                  <li>
+                    Lithology affects erosion, drainage, and access conditions.
+                  </li>
                 </ul>
               </div>
 
-
               <div className="mt-4 text-xs text-slate-500">
-                Basin classification and petroleum system elements shown here are simplified educational summaries based on dominant regional characteristics.
+                Basin classification and petroleum system elements shown here are
+                simplified educational summaries based on dominant regional
+                characteristics.
               </div>
-
-
             </div>
           </div>
         )}
